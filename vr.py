@@ -1,7 +1,7 @@
-import os,sys
+import os
 parent_directory = os.path.dirname(os.path.abspath(__file__))
 
-import logging,pdb
+import logging
 logger = logging.getLogger(__name__)
 
 import librosa
@@ -41,7 +41,7 @@ class AudioPre:
         self.mp = mp
         self.model = model
 
-    def _path_audio_(
+    def handle_audio(
         self, music_file, ins_root=None, vocal_root=None, format="flac", is_hp3=False
     ):
         if ins_root is None and vocal_root is None:
@@ -111,7 +111,7 @@ class AudioPre:
         y_spec_m = pred * X_phase
         v_spec_m = X_spec_m - y_spec_m
 
-        if is_hp3 == True:
+        if is_hp3:
             ins_root,vocal_root = vocal_root,ins_root
 
         if ins_root is not None:
@@ -125,7 +125,7 @@ class AudioPre:
             else:
                 wav_instrument = spec_utils.cmb_spectrogram_to_wave(y_spec_m, self.mp)
             logger.info("%s instruments done" % name)
-            if is_hp3 == True:
+            if is_hp3:
                 head = "vocal_"
             else:
                 head = "instrument_"
@@ -156,7 +156,7 @@ class AudioPre:
                         except:
                             pass
         if vocal_root is not None:
-            if is_hp3 == True:
+            if is_hp3:
                 head = "instrument_"
             else:
                 head = "vocal_"
@@ -225,7 +225,7 @@ class AudioPreDeEcho:
         self.mp = mp
         self.model = model
 
-    def _path_audio_(
+    def handle_audio(
         self, music_file, vocal_root=None, ins_root=None, format="flac", is_hp3=False
     ):  # 3个VR模型vocal和ins是反的
         if ins_root is None and vocal_root is None:

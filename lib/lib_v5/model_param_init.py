@@ -1,16 +1,15 @@
 import json
-import os
 import pathlib
 
-default_param = {}
-default_param["bins"] = 768
-default_param["unstable_bins"] = 9  # training only
-default_param["reduction_bins"] = 762  # training only
-default_param["sr"] = 44100
-default_param["pre_filter_start"] = 757
-default_param["pre_filter_stop"] = 768
-default_param["band"] = {}
-
+default_param = {
+    "bins": 768,
+    "unstable_bins": 9,
+    "reduction_bins": 762,
+    "sr": 44100,
+    "pre_filter_start": 757,
+    "pre_filter_stop": 768,
+    "band": {}
+}
 
 default_param["band"][1] = {
     "sr": 11025,
@@ -47,9 +46,9 @@ class ModelParameters(object):
         if ".pth" == pathlib.Path(config_path).suffix:
             import zipfile
 
-            with zipfile.ZipFile(config_path, "r") as zip:
+            with zipfile.ZipFile(config_path, "r") as z:
                 self.param = json.loads(
-                    zip.read("param.json"), object_pairs_hook=int_keys
+                    z.read("param.json"), object_pairs_hook=int_keys
                 )
         elif ".json" == pathlib.Path(config_path).suffix:
             with open(config_path, "r") as f:
