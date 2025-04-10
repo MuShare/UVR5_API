@@ -198,4 +198,8 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-uvr5_weights
+bin
+lib
+share
+pyvenv.cfg
+
