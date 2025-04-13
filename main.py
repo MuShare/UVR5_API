@@ -1,92 +1,77 @@
-import os
+from ast import Not
+from typing import Union
+from fastapi import FastAPI, Query
+from fastapi.responses import FileResponse
+from uvr import my_uvr
 import tempfile
-import time
+import os
+import uuid
+import requests
 
-from my_utils import clean_path
-from vr import AudioPre
-import ffmpeg
-import torch
+app = FastAPI()
 
-def check_if_reformat_needed(input_path, ffprobe_path='/opt/homebrew/bin/ffprobe'):
-    """
-    Check if an audio file needs to be reformatted.
-    Returns True if reformatting is needed, False otherwise.
-    """
-    need_reformat = True
+@app.get("/")
+async def read_root():
+    return {
+        "Hello": "World"
+    }
+
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int, q: Union[str, None] = None):
+    return {
+        "item_id": item_id,
+        "q": q
+    }
+
+async def download_file(url: str, temp_file_path: str):
     try:
-        info = ffmpeg.probe(input_path, cmd=ffprobe_path)
-        channel_count = info["streams"][0]["channels"]
-        sample_rate = info["streams"][0]["sample_rate"]
+        response = requests.get(url, stream=True)
+        response.raise_for_status()  # Raise an exception for HTTP errors
 
-        # No need to reformat if:
-        # - channel count is not 2, OR
-        # - sample rate is 44100
-        if channel_count != 2 or sample_rate == "44100":
-            need_reformat = False
-    except Exception as e:
-        print(f"Error checking format: {e}")
-    return need_reformat
+        with open(temp_file_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
 
-def convert_audio(input_path, output_path, ar=44100, ac=2):
-    try:
-        ffmpeg.input(input_path)\
-              .output(output_path, format='wav', acodec='pcm_s16le', ac=ac, ar=ar)\
-              .overwrite_output()\
-              .run(quiet=True)
-        return True
-    except ffmpeg.Error as e:
-        print(f"ffmpeg error: {e.stderr.decode() if e.stderr else str(e)}")
-        return False
-    except Exception as e:
-        print(f"Error converting audio: {str(e)}")
-        return False
+        print(f"File downloaded successfully to {temp_file_path}")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Error downloading file: {e}")
 
-def my_uvr(model_name, save_root_vocal, input_path, audio_format):
-    weight_uvr5_root = "uvr5_weights"
-    save_root_vocal = clean_path(save_root_vocal)
-    pre_fun = AudioPre(
-        agg=2,
-        model_path=os.path.join(weight_uvr5_root, model_name + ".pth"),
-        device='mps',
-        is_half=False,
-    )
+def get_file(keyword: str, endswith: str, in_dir: str) -> str | None:
+    # 获取所有子文件
+    subfiles = os.listdir(in_dir)
+    for file_name in subfiles:
+        if file_name.endswith(endswith) and keyword in file_name:
+            return os.path.join(in_dir, file_name)
+    return None
 
-    if check_if_reformat_needed(input_path):
-        tmp_file_name = f"{os.path.basename(input_path)}.reformatted.wav"
-        tmp_file_path = os.path.join(tempfile.gettempdir(), tmp_file_name)
-        convert_audio(input_path, tmp_file_path)
-        input_path = tmp_file_path
+@app.post("/voice/vocal_process", response_class=FileResponse)
+async def process_vocal(
+    ossFilePath: str = Query(
+        None,
+        title="aliyun OSS file path",
+        description="The path to the audio file in aliyun OSS",
+        example="https://bucket-name/path/to/file.mp3"
+    ),
+):
+    tempdir = tempfile.gettempdir()
+    random_uuid = str(uuid.uuid4())
+    temp_file_path = os.path.join(tempdir, f"{random_uuid}.mp3")
 
     try:
-        pre_fun.handle_audio(
-            music_file=input_path,
-            ins_root=None,
-            vocal_root=save_root_vocal,
-            format=audio_format,
-            is_hp3=False
+        await download_file(ossFilePath, temp_file_path)
+
+        my_uvr(
+            model_name='HP5_only_main_vocal',
+            save_root_vocal='./vocal_voice/',
+            input_path=temp_file_path,
+            audio_format='mp3'
         )
+
+        saved_vocal_path = get_file(random_uuid, '.mp3', './vocal_voice/')
+        if saved_vocal_path is None:
+            raise Exception("Vocal file not found")
+
+        return FileResponse(saved_vocal_path, media_type="audio/mpeg")
     except Exception as e:
-        print("pre_fun.handle_audio error =>", e)
-    finally:
-        try:
-            del pre_fun.model
-            del pre_fun
-        except Exception as e:
-            print("del pre_fun.model =>", e)
-
-        print("clean_empty_cache")
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-def main():
-    start_time = time.perf_counter()
-    my_uvr(
-        model_name='HP5_only_main_vocal',
-        save_root_vocal='/Users/yin.yan/Desktop/outputs/',
-        input_path='/Users/yin.yan/Downloads/f2532a57ba0a833ef6f70e0b68b2dd9577020a174c976e0cf21e8994991ede09.mp3',
-        audio_format='mp3'
-    )
-    end = time.perf_counter()
-    print(f"Execution time: {end - start_time:.2f} seconds")
-
-main()
+        print(f"Error processing vocal: {e}")
