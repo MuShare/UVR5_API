@@ -78,6 +78,7 @@ def my_uvr(model_name, save_root_vocal, input_path, audio_format):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+
 def main():
     start_time = time.perf_counter()
     my_uvr(
@@ -89,4 +90,6 @@ def main():
     end = time.perf_counter()
     print(f"Execution time: {end - start_time:.2f} seconds")
 
-main()
+# main()
+if __name__ == "__main__":
+    main()
