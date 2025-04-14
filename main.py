@@ -17,7 +17,7 @@ async def read_root():
     }
 
 
-@app.get("/items/{item_id}")
+@app.get("/voice/items/{item_id}")
 async def read_item(item_id: int, q: Union[str, None] = None):
     return {
         "item_id": item_id,
@@ -61,12 +61,24 @@ async def process_vocal(
     try:
         await download_file(ossFilePath, temp_file_path)
 
+        ## clean ./vocal_voice/ folder
+        if os.path.exists('./vocal_voice/'):
+            for file in os.listdir('./vocal_voice/'):
+                file_path = os.path.join('./vocal_voice/', file)
+                if os.path.isfile(file_path):
+                    print(f"Deleting file: {file_path}")
+                    os.remove(file_path)
+
         my_uvr(
             model_name='HP5_only_main_vocal',
             save_root_vocal='./vocal_voice/',
             input_path=temp_file_path,
             audio_format='mp3'
         )
+
+        if os.path.exists(temp_file_path):
+            print(f"Deleting temp file: {temp_file_path}")
+            os.remove(temp_file_path)
 
         saved_vocal_path = get_file(random_uuid, '.mp3', './vocal_voice/')
         if saved_vocal_path is None:
