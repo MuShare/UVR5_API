@@ -1,6 +1,6 @@
 # UVR5_API
 
-利用了 uvr5 对音频进行人声分离
+Used UVR5 to separate vocals from the audio.
 
 # Model
 - VR
