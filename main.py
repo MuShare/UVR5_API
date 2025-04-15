@@ -65,7 +65,7 @@ async def process_vocal(
             model_name='HP5_only_main_vocal',
             save_root_vocal='./vocal_voice/',
             input_path=temp_file_path,
-            audio_format='wav'
+            audio_format='mp3'
         )
 
         saved_vocal_path = get_file(random_uuid, '.mp3', './vocal_voice/')
