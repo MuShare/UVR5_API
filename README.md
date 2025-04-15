@@ -1,0 +1,24 @@
+# UVR5_API
+
+利用了 uvr5 对音频进行人声分离
+
+# Model
+- VR
+
+# API
+
+```
+POST /voice/vocal_process
+Query: ossFilePath 
+```
+
+# Usage
+
+```shell
+git clone https://github.com/MuShare/UVR5_API.git
+cd UVR5_API
+python -m venv venv
+source venv/bin/activate
+pip install -r requirement.txt
+uvicorn main:app --host 0.0.0.0
+```
