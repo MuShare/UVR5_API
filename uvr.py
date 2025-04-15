@@ -41,13 +41,22 @@ def convert_audio(input_path, output_path, ar=44100, ac=2):
         print(f"Error converting audio: {str(e)}")
         return False
 
+def get_torch_device():
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        return "mps"  # Mac MPS
+    elif torch.cuda.is_available():
+        return "cuda"  # NVIDIA CUDA
+    else:
+        return "cpu"   # CPU fallback
+
 def my_uvr(model_name, save_root_vocal, input_path, audio_format):
     weight_uvr5_root = "uvr5_weights"
     save_root_vocal = clean_path(save_root_vocal)
+    device = get_torch_device()
     pre_fun = AudioPre(
         agg=2,
         model_path=os.path.join(weight_uvr5_root, model_name + ".pth"),
-        device='mps',
+        device=device,
         is_half=False,
     )
 
