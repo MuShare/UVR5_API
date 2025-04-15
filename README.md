@@ -22,3 +22,8 @@ source venv/bin/activate
 pip install -r requirement.txt
 uvicorn main:app --host 0.0.0.0
 ```
+
+# Reference Repo
+- https://github.com/lililuya/UVR_api
+- https://github.com/NextAudioGen/ultimatevocalremover_api
+- https://github.com/RVC-Boss/GPT-SoVITS
