@@ -1,4 +1,5 @@
 from ast import Not
+import torch
 from typing import Union
 from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse
@@ -65,7 +66,7 @@ async def process_vocal(
             model_name='HP5_only_main_vocal',
             save_root_vocal='./vocal_voice/',
             input_path=temp_file_path,
-            audio_format='mp3'
+            audio_format='wav'
         )
 
         saved_vocal_path = get_file(random_uuid, '.mp3', './vocal_voice/')
