@@ -1,5 +1,4 @@
 from ast import Not
-import torch
 from typing import Union
 from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse
